@@ -1,0 +1,51 @@
+// Just change the date to whatever you need it to be under licenses, https://store.steampowered.com/account/licenses/
+var targetDate = new Date("1 Jan, 2024");
+
+function isTargetDate(gameDate) {
+    return gameDate.toDateString() === targetDate.toDateString();
+}
+
+var removeLinks = jQuery('.account_table a');
+var total = removeLinks.length;
+var loaded = 0;
+var queue = [];
+var modal = ShowBlockingWaitDialog('Starting up…', 'Collecting eligible games.');
+
+removeLinks.each(function (i, el) {
+    var match = el.href.match(/javascript:RemoveFreeLicense\( ([0-9]+), '/);
+    if (match !== null) {
+        var packageid = +match[1];
+        var gameDate = new Date(jQuery(el).closest('tr').find('td:eq(0)').text());
+        if (isTargetDate(gameDate)) {
+            queue.push(packageid);
+        }
+    }
+});
+
+if (queue.length == 0) {
+    console.log('No removable games found on ' + targetDate.toDateString() + '!')
+    modal.Dismiss();
+} else {
+    // Dont modify the speed
+    setInterval(() => {
+        if (queue.length > 0) {
+            var packageid = queue.shift();
+            jQuery.post(
+                'https://store.steampowered.com/account/removelicense',
+                {
+                    sessionid: g_sessionID,
+                    packageid: packageid
+                }
+            ).always(function () {
+                loaded++;
+                modal.Dismiss();
+                if (loaded >= total) {
+
+                    location.reload();
+                } else {
+                    modal = ShowBlockingWaitDialog('Executing…', 'Submitted <b>' + loaded + '</b>/' + total + ' removal requests.');
+                }
+            });
+        }
+    }, 1000);
+}

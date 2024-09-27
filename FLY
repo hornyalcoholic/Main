@@ -1,3 +1,5 @@
+# Fly Script, designed specifically for Roblox's game engine, functions exclusively with exploits that support bytecode conversion
+
 local FlyKey = Enum.KeyCode.L
 local SpeedKey = Enum.KeyCode.LeftControl
 
